@@ -1,0 +1,15 @@
+{
+  "venvPath": "engine",
+  "venv": "venv",
+  "extraPaths": [
+    "engine"
+  ],
+  "executionEnvironments": [
+    {
+      "root": "engine",
+      "extraPaths": [
+        "engine"
+      ]
+    }
+  ]
+}
