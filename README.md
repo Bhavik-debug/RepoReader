@@ -13,7 +13,7 @@
 
 Onboarding to a large, unfamiliar codebase is one of the most time-consuming bottlenecks in modern software engineering. Traditional approaches involve hours of manual code tracing, parsing complex dependency graphs, and reading outdated documentation.
 
-**RepoReader** solves this by providing a local-first, zero-cost RAG (Retrieval-Augmented Generation) DevTool. Developers paste any public or private GitHub repository URL, and the system instantly clones the codebase, filters out non-code noise, partitions code files into semantic chunks, and vectorizes them locally. The user is then provided with a premium chat interface to interact with the codebase, query architectural decisions, trace function executions, and generate new, context-aware features with precise source file citations.
+**RepoReader** solves this by providing a RAG (Retrieval-Augmented Generation) DevTool. Developers paste any public GitHub repository URL, and the system instantly clones the codebase, filters out non-code noise, partitions code files into semantic chunks, and vectorizes them locally. The user is then provided with a premium chat interface to interact with the codebase, query architectural decisions, trace function executions, and generate new, context-aware features with precise source file citations.
 
 ---
 
