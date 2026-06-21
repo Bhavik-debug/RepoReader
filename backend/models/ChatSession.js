@@ -16,7 +16,8 @@ const MessageSchema = new mongoose.Schema({
       file_path: String,
       file_name: String,
       start_line: Number,
-      end_line: Number
+      end_line: Number,
+      raw_code_content: String
     }
   ],
   createdAt: {
