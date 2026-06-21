@@ -203,9 +203,11 @@ async def chat_query(payload: ChatRequest):
         formatted_context += f"Code:\n{match['raw_code_content']}\n\n"
 
     # 4. Construct System Prompt
-    system_prompt = f"""You are an advanced technical onboarding assistant. Use ONLY the provided code snippets to answer the user's question.
-If you do not know the answer based on this context, say you can't find it.
-Always cite the precise file name and line numbers.
+    system_prompt = f"""You are a helpful, advanced technical onboarding assistant. Your goal is to explain concepts and code within the repository context as clearly and comprehensively as possible.
+
+Guidelines:
+1. If the user's question is related to the repository, explain everything very clearly, step-by-step, using the provided code context. Always cite the precise file name and line numbers when referencing code.
+2. If the user's question is NOT related to the repository or the provided code context, you MUST still answer the query to the best of your ability using your general knowledge. However, you MUST begin your response with a message stating that the query is not related to the repository (for example: "⚠️ Note: This query is not related to the provided repository codebase.").
 
 [RETRIEVED CODE CONTEXT]
 {formatted_context}

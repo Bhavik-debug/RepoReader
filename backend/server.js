@@ -283,6 +283,19 @@ app.get('/api/chats/:sessionId', requireAuth, async (req, res) => {
   }
 });
 
+app.delete('/api/chats/:sessionId', requireAuth, async (req, res) => {
+  try {
+    const result = await ChatSession.findOneAndDelete({ sessionId: req.params.sessionId, userId: req.user._id });
+    if (!result) {
+      return res.status(404).json({ error: 'Chat session not found' });
+    }
+    res.json({ success: true, message: 'Chat session deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting chat session:', err);
+    res.status(500).json({ error: 'Failed to delete chat session' });
+  }
+});
+
 // Streaming Chat API (SSE)
 app.post('/api/chats/:sessionId/query', requireAuth, async (req, res) => {
   const { sessionId } = req.params;

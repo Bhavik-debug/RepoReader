@@ -14,13 +14,14 @@ import {
   FileText, 
   ChevronRight,
   BookOpen,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 
 function App() {
   // Auth States
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('reporeader_user');
+    const saved = sessionStorage.getItem('reporeader_user');
     return saved ? JSON.parse(saved) : null;
   });
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
@@ -35,12 +36,15 @@ function App() {
   const [githubTokenInput, setGithubTokenInput] = useState('');
   const [indexingError, setIndexingError] = useState('');
   const [isIndexingSubmitting, setIsIndexingSubmitting] = useState(false);
+  const [showRepoSearch, setShowRepoSearch] = useState(false);
+  const [repoSearchQuery, setRepoSearchQuery] = useState('');
 
   // Chat States
   const [sessions, setSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
   const [questionInput, setQuestionInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
   // Citation Drawer States
   const [drawerCitation, setDrawerCitation] = useState(null); // stores active citation showing in sidebar
@@ -176,7 +180,7 @@ function App() {
       if (authMode === 'login') {
         const loggedInUser = { username: data.user.username, id: data.user.id };
         setUser(loggedInUser);
-        localStorage.setItem('reporeader_user', JSON.stringify(loggedInUser));
+        sessionStorage.setItem('reporeader_user', JSON.stringify(loggedInUser));
         setUsernameInput('');
         setPasswordInput('');
       } else {
@@ -190,8 +194,37 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('reporeader_user');
+    sessionStorage.removeItem('reporeader_user');
     window.location.reload();
+  };
+
+  const handleDeleteChatClick = (sessionId, e) => {
+    e.stopPropagation();
+    setDeleteConfirmation(sessionId);
+  };
+
+  const executeDeleteChat = async (sessionId) => {
+    if (!user) return;
+    try {
+      const res = await fetch(`/api/chats/${sessionId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-user-id': user.id
+        }
+      });
+      if (res.ok) {
+        setSessions(prev => prev.filter(s => s.sessionId !== sessionId));
+        if (currentSession?.sessionId === sessionId) {
+          setCurrentSession(null);
+        }
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete chat session');
+      }
+    } catch (err) {
+      console.error("Failed to delete chat session:", err);
+      alert('Connection failed');
+    }
   };
 
   // Index New Codebase
@@ -420,6 +453,11 @@ function App() {
     setDrawerCitation(citation);
   };
 
+  const filteredRepos = repos.filter(r => 
+    r.name.toLowerCase().includes(repoSearchQuery.toLowerCase()) || 
+    r.owner.toLowerCase().includes(repoSearchQuery.toLowerCase())
+  );
+
   return (
     <div className="app-container">
       
@@ -523,16 +561,37 @@ function App() {
           <div>
             <div className="section-title">
               <span>Codebases</span>
-              <Search size={14} style={{ color: 'var(--text-secondary)' }} />
+              <Search 
+                size={14} 
+                style={{ color: showRepoSearch ? 'var(--primary)' : 'var(--text-secondary)', cursor: 'pointer' }}
+                onClick={() => {
+                  setShowRepoSearch(!showRepoSearch);
+                  if (showRepoSearch) setRepoSearchQuery('');
+                }}
+              />
             </div>
+
+            {showRepoSearch && (
+              <div style={{ padding: '0 4px 8px 4px' }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Filter codebases..."
+                  value={repoSearchQuery}
+                  onChange={(e) => setRepoSearchQuery(e.target.value)}
+                  style={{ margin: 0, padding: '4px 8px', fontSize: '0.8rem', width: '100%', boxSizing: 'border-box' }}
+                  autoFocus
+                />
+              </div>
+            )}
             
-            {repos.length === 0 ? (
+            {filteredRepos.length === 0 ? (
               <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '12px 0' }}>
-                No repositories indexed yet.
+                {repos.length === 0 ? 'No repositories indexed yet.' : 'No matching repositories.'}
               </div>
             ) : (
               <div className="repo-list">
-                {repos.map((r) => (
+                {filteredRepos.map((r) => (
                   <div 
                     key={r.repoId} 
                     className={`repo-card ${activeRepo?.repoId === r.repoId ? 'active' : ''}`}
@@ -577,11 +636,30 @@ function App() {
                     key={s.sessionId}
                     className={`repo-card ${currentSession?.sessionId === s.sessionId ? 'active' : ''}`}
                     onClick={() => fetchSessionDetails(s.sessionId)}
-                    style={{ padding: '8px 10px', fontSize: '0.85rem' }}
+                    style={{ padding: '8px 10px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}
                   >
-                    <div style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    <div style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', flex: 1 }}>
                       {s.title}
                     </div>
+                    <button
+                      onClick={(e) => handleDeleteChatClick(s.sessionId, e)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        padding: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 4
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--danger)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                      title="Delete chat"
+                    >
+                      <Trash2 size={12} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -785,6 +863,46 @@ function App() {
                   {drawerCitation.raw_code_content || '// Code snippet loading or not available in citation...'}
                 </code>
               </pre>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 4. CUSTOM CONFIRMATION MODAL FOR DELETING CHAT */}
+      {deleteConfirmation && (
+        <>
+          <div className="overlay" onClick={() => setDeleteConfirmation(null)} />
+          <div className="confirm-modal">
+            <div className="confirm-modal-header">
+              <div className="confirm-modal-title">Delete Chat Session</div>
+            </div>
+            <div className="confirm-modal-content">
+              Are you sure you want to delete this chat session? This action cannot be undone.
+            </div>
+            <div className="confirm-modal-actions">
+              <button 
+                className="btn-secondary" 
+                onClick={() => setDeleteConfirmation(null)}
+                style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn-primary" 
+                onClick={() => {
+                  executeDeleteChat(deleteConfirmation);
+                  setDeleteConfirmation(null);
+                }}
+                style={{ 
+                  padding: '6px 12px', 
+                  fontSize: '0.8rem', 
+                  background: 'var(--danger)', 
+                  borderColor: 'var(--danger)',
+                  color: 'white'
+                }}
+              >
+                Delete
+              </button>
             </div>
           </div>
         </>
