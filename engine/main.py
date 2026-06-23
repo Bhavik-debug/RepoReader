@@ -172,6 +172,9 @@ async def chat_query(payload: ChatRequest):
     """
     Handles RAG search and returns a Server-Sent Events stream with LLM completion.
     """
+    logger.info(f"Received chat request. Question: '{payload.question}', History size: {len(payload.chat_history)}")
+    for idx, msg in enumerate(payload.chat_history):
+        logger.info(f"  History[{idx}]: role={msg.role}, content_len={len(msg.content)}")
     collection_name = f"repo_{payload.repo_id}"
 
     # 1. Embed user question
@@ -207,7 +210,7 @@ async def chat_query(payload: ChatRequest):
 
 Guidelines:
 1. If the user's question is related to the repository, explain everything very clearly, step-by-step, using the provided code context. Always cite the precise file name and line numbers when referencing code.
-2. If the user's question is NOT related to the repository or the provided code context, you MUST still answer the query to the best of your ability using your general knowledge. However, you MUST begin your response with a message stating that the query is not related to the repository (for example: "⚠️ Note: This query is not related to the provided repository codebase.").
+2. If the user's question is NOT related to the repository or the provided code context, you MUST still answer the query to the best of your ability using your general knowledge. However, you MUST begin your response with a message stating that the query is not related to the repository (for example: "⚠️ Note: This query is not related to the provided repository codebase.").But only write this message if the question is unrelated to the repo context.
 
 [RETRIEVED CODE CONTEXT]
 {formatted_context}
