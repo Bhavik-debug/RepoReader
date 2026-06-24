@@ -66,7 +66,8 @@ def run_indexing_pipeline(repo_url: str, repo_id: str, github_token: Optional[st
 
     collection_name = f"repo_{repo_id}"
     express_port = os.getenv("PORT", "5000")
-    callback_url = f"http://localhost:{express_port}/api/repos/{repo_id}/callback"
+    backend_url = os.getenv("BACKEND_URL", f"http://localhost:{express_port}")
+    callback_url = f"{backend_url}/api/repos/{repo_id}/callback"
 
     try:
         # Step 1: Parse and download

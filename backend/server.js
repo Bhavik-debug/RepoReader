@@ -12,7 +12,7 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 const app = express();
 const PORT = process.env.PORT || 5000;
 const PYTHON_PORT = process.env.PYTHON_PORT || 8000;
-const PYTHON_ENGINE_URL = `http://localhost:${PYTHON_PORT}`;
+const PYTHON_ENGINE_URL = process.env.PYTHON_ENGINE_URL || `http://localhost:${PYTHON_PORT}`;
 
 // Models
 const User = require('./models/User');
