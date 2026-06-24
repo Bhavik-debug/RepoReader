@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://reporeader-backend.onrender.com"
+      "destination": "https://reporeader-backend.onrender.com/api/:path*"
     },
     {
       "source": "/(..*)",
